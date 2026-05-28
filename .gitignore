@@ -35,3 +35,7 @@ investment-app/expo-env.d.ts
 # Supabase local
 supabase/.branches/
 supabase/.temp/
+
+# Generated SQL with real secrets resolved into it (NEVER commit)
+supabase/cron_ready.sql
+supabase/init_user.sql
