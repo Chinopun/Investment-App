@@ -1,0 +1,37 @@
+# Secrets — NEVER commit these
+.env
+.env.local
+*.env
+!.env.example
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# Claude Code per-user state (keep .claude/launch.json shared, ignore the rest)
+.claude/settings.local.json
+.claude/plans/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Expo
+investment-app/.expo/
+investment-app/dist/
+investment-app/web-build/
+investment-app/ios/
+investment-app/android/
+investment-app/expo-env.d.ts
+
+# Supabase local
+supabase/.branches/
+supabase/.temp/

@@ -1,0 +1,13 @@
+project_id = "investment-app"
+
+[functions.fetch-news]
+verify_jwt = false
+
+[functions.build-daily-digest]
+verify_jwt = false
+
+[functions.push-digest]
+verify_jwt = false
+
+[functions.breaking-news-watcher]
+verify_jwt = false

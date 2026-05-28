@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Investment Info",
+    "slug": "investment-app",
+    "version": "0.1.0",
+    "scheme": "investment-app",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.virojns.investmentapp",
+      "infoPlist": {
+        "UIBackgroundModes": ["fetch", "remote-notification"]
+      }
+    },
+    "android": {
+      "package": "com.virojns.investmentapp"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "color": "#0a84ff"
+        }
+      ],
+      "expo-background-fetch",
+      "expo-task-manager"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "supabaseUrl": "$SUPABASE_URL",
+      "supabaseAnonKey": "$SUPABASE_ANON_KEY"
+    }
+  }
+}
