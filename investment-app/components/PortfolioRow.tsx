@@ -2,62 +2,139 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { Holding, Quote } from '../lib/types';
 
-type Props = { holding: Holding; quote?: Quote };
+type Props = {
+  holding: Holding;
+  quote?: Quote;
+  onEdit?: (h: Holding) => void;
+};
 
-export function PortfolioRow({ holding, quote }: Props) {
+const POS = '#0a8a3f';
+const NEG = '#c83a3a';
+const sign = (n: number) => (n >= 0 ? '+' : '');
+const cur = (n: number) =>
+  Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+export function PortfolioRow({ holding, quote, onEdit }: Props) {
   const router = useRouter();
-  const positive = (quote?.change_pct ?? 0) >= 0;
-  const value = quote && holding.shares ? quote.price * holding.shares : null;
-  const dayChange =
-    quote && holding.shares ? quote.change * holding.shares : null;
+
+  const shares = holding.shares;
+  const cost = holding.cost_basis;
+  const price = quote?.price;
+
+  const totalValue = price != null && shares != null ? price * shares : null;
+  const dayAbs = quote && shares != null ? quote.change * shares : null;
+  const dayPct = quote?.change_pct ?? null;
+
+  const allTimeAbs =
+    price != null && cost != null && shares != null ? (price - cost) * shares : null;
+  const allTimePct =
+    price != null && cost != null && cost > 0 ? ((price - cost) / cost) * 100 : null;
+
+  const allTimeColor = allTimeAbs == null ? '#666' : allTimeAbs >= 0 ? POS : NEG;
+  const dayColor = dayAbs == null ? '#666' : dayAbs >= 0 ? POS : NEG;
 
   return (
-    <Pressable
-      onPress={() => router.push(`/stock/${holding.ticker}`)}
-      style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
-    >
-      <View style={{ flex: 1 }}>
-        <Text style={styles.ticker}>{holding.ticker}</Text>
-        <Text style={styles.name} numberOfLines={1}>
-          {quote?.name ?? holding.name ?? ''}
-        </Text>
-      </View>
-      <View style={{ alignItems: 'flex-end' }}>
-        <Text style={styles.price}>
-          {quote ? `$${quote.price.toFixed(2)}` : '—'}
-        </Text>
-        <Text style={[styles.change, { color: positive ? '#0a8a3f' : '#c83a3a' }]}>
-          {quote
-            ? `${positive ? '+' : ''}${quote.change.toFixed(2)} (${quote.change_pct.toFixed(2)}%)`
-            : ''}
-        </Text>
-        {value !== null && (
-          <Text style={styles.value}>
-            ${value.toFixed(0)}{' '}
-            {dayChange !== null && (
-              <Text style={{ color: positive ? '#0a8a3f' : '#c83a3a' }}>
-                ({positive ? '+' : ''}${dayChange.toFixed(0)})
-              </Text>
+    <View style={styles.row}>
+      <Pressable
+        onPress={() => router.push(`/stock/${holding.ticker}`)}
+        style={({ pressed }) => [styles.main, pressed && { opacity: 0.7 }]}
+      >
+        {/* LEFT — identity */}
+        <View style={{ flex: 1, paddingRight: 10 }}>
+          <Text style={styles.ticker}>{holding.ticker}</Text>
+          <Text style={styles.name} numberOfLines={1}>
+            {quote?.name ?? holding.name ?? ''}
+          </Text>
+          {shares != null && (
+            <Text style={styles.shares} numberOfLines={1}>
+              {shares} sh{cost != null ? ` @ $${cost.toFixed(2)}` : ''}
+            </Text>
+          )}
+        </View>
+
+        {/* RIGHT — change-first stack */}
+        <View style={styles.right}>
+          {/* All-time (primary) */}
+          <Text style={[styles.allTimePct, { color: allTimeColor }]} numberOfLines={1}>
+            {allTimePct == null ? '—' : `${sign(allTimePct)}${allTimePct.toFixed(2)}%`}
+          </Text>
+          <Text style={[styles.allTimeAbs, { color: allTimeColor }]} numberOfLines={1}>
+            {allTimeAbs == null
+              ? <Text style={styles.inlineLabel}>all time</Text>
+              : <>
+                  {sign(allTimeAbs)}${cur(allTimeAbs)}
+                  <Text style={styles.inlineLabel}>  all time</Text>
+                </>
+            }
+          </Text>
+
+          {/* Today (secondary) */}
+          <Text style={[styles.today, { color: dayColor }]} numberOfLines={1}>
+            {dayPct == null
+              ? <Text style={styles.inlineLabel}>today</Text>
+              : <>
+                  {sign(dayPct)}{dayPct.toFixed(2)}%
+                  {dayAbs != null && `  ${sign(dayAbs)}$${cur(dayAbs)}`}
+                  <Text style={styles.inlineLabel}>  today</Text>
+                </>
+            }
+          </Text>
+
+          {/* Value + stock price (tertiary) */}
+          <Text style={styles.valueLine} numberOfLines={1}>
+            {totalValue != null ? `$${cur(totalValue)}` : '—'}
+            {price != null && (
+              <>
+                <Text style={styles.inlineLabel}>  ·  </Text>
+                <Text style={styles.stockPrice}>${cur(price)}</Text>
+                <Text style={styles.inlineLabel}>/sh</Text>
+              </>
             )}
           </Text>
-        )}
-      </View>
-    </Pressable>
+        </View>
+      </Pressable>
+
+      {onEdit && (
+        <Pressable
+          onPress={() => onEdit(holding)}
+          hitSlop={10}
+          style={({ pressed }) => [styles.editBtn, pressed && { opacity: 0.5 }]}
+        >
+          <Text style={styles.editIcon}>✎</Text>
+        </Pressable>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e2e4e9',
+    flexDirection: 'row', alignItems: 'stretch',
     backgroundColor: '#fff',
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#e2e4e9',
   },
-  ticker: { fontSize: 17, fontWeight: '600', color: '#111' },
-  name: { fontSize: 13, color: '#666', marginTop: 2 },
-  price: { fontSize: 17, fontWeight: '500', color: '#111' },
-  change: { fontSize: 13, marginTop: 2 },
-  value: { fontSize: 12, color: '#666', marginTop: 2 },
+  main: {
+    flex: 1, flexDirection: 'row',
+    paddingVertical: 10, paddingHorizontal: 14,
+  },
+  // LEFT
+  ticker: { fontSize: 16, fontWeight: '700', color: '#111' },
+  name: { fontSize: 12, color: '#666', marginTop: 1 },
+  shares: { fontSize: 11, color: '#999', marginTop: 2 },
+
+  // RIGHT
+  right: { alignItems: 'flex-end', minWidth: 130 },
+  allTimePct: { fontSize: 18, fontWeight: '700', letterSpacing: -0.2 },
+  allTimeAbs: { fontSize: 12, fontWeight: '600', marginTop: 1 },
+  today: { fontSize: 12, fontWeight: '500', marginTop: 4 },
+  valueLine: { fontSize: 11, fontWeight: '500', color: '#444', marginTop: 4 },
+  stockPrice: { color: '#444', fontWeight: '500' },
+  inlineLabel: { color: '#999', fontWeight: '400' },
+
+  // edit chip
+  editBtn: {
+    paddingHorizontal: 12, justifyContent: 'center', alignItems: 'center',
+    borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: '#eef0f4',
+  },
+  editIcon: { fontSize: 16, color: '#0a84ff' },
 });

@@ -1,12 +1,13 @@
 import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
-import Constants from 'expo-constants';
 
-const url = (Constants.expoConfig?.extra?.supabaseUrl as string) ?? process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
-const anon = (Constants.expoConfig?.extra?.supabaseAnonKey as string) ?? process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+const url = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+const anon = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
 if (!url || !anon) {
-  console.warn('Supabase URL/key missing. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in .env');
+  throw new Error(
+    'Supabase URL/key missing. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in investment-app/.env, then restart `npx expo start --clear`.',
+  );
 }
 
 export const supabase = createClient(url, anon, {

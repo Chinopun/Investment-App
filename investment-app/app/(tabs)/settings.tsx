@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Pressable, SafeAreaView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { supabase, getCurrentUserId, USER_EMAIL } from '../../lib/supabase';
 import { scheduleDailyDigestReminder } from '../../lib/notifications';
 import { usePortfolio } from '../../store/portfolio';
@@ -34,7 +34,11 @@ export default function SettingsTab() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f8f9fb' }}>
-      <View style={{ padding: 16 }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <Text style={styles.title}>Settings</Text>
         <Text style={styles.label}>Signed in as</Text>
         <Text style={styles.email}>{USER_EMAIL}</Text>
@@ -62,7 +66,7 @@ export default function SettingsTab() {
             </Pressable>
           </View>
         ))}
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

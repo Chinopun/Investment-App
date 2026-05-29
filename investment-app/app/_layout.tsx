@@ -19,9 +19,15 @@ export default function RootLayout() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="stock/[ticker]" options={{ headerShown: true, title: '' }} />
-      <Stack.Screen name="digest/[date]" options={{ headerShown: true, title: 'Daily Digest' }} />
+      <Stack.Screen name="(tabs)" options={{ title: 'Portfolio' }} />
+      <Stack.Screen
+        name="stock/[ticker]"
+        options={{ headerShown: true, title: '', headerBackTitle: 'Portfolio' }}
+      />
+      <Stack.Screen
+        name="digest/[date]"
+        options={{ headerShown: true, title: 'Daily Digest', headerBackTitle: 'Portfolio' }}
+      />
     </Stack>
   );
 }
