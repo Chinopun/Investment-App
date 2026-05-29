@@ -9,8 +9,8 @@ create extension if not exists "pg_net";
 create table if not exists public.users (
   id uuid primary key default gen_random_uuid(),
   email text not null unique,
-  notify_time time not null default '07:00',
-  tz text not null default 'America/New_York',
+  notify_time time not null default '08:00',
+  tz text not null default 'Asia/Bangkok',
   created_at timestamptz not null default now()
 );
 

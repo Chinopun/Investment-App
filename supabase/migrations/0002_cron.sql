@@ -1,7 +1,7 @@
 -- Schedule the four edge functions on pg_cron.
 -- Replace YOUR_PROJECT_REF and YOUR_SERVICE_ROLE_KEY before running.
--- Times are in UTC. ET is UTC-5 (winter) / UTC-4 (summer). Pick whichever fits your needs;
--- adjust twice a year, or use multiple cron rows.
+-- Times are in UTC. Digest is timed for Asia/Bangkok (UTC+7, no DST):
+--   08:00 Bangkok == 01:00 UTC.  Adjust if you move time zones.
 
 -- fetch-news: every 15 minutes
 select cron.schedule(
@@ -19,10 +19,10 @@ select cron.schedule(
   $$
 );
 
--- build-daily-digest: weekdays at 11:30 UTC = 06:30 ET (winter) / 07:30 ET (summer)
+-- build-daily-digest: weekdays at 00:30 UTC = 07:30 Asia/Bangkok
 select cron.schedule(
-  'build-digest-630et',
-  '30 11 * * 1-5',
+  'build-digest-bkk',
+  '30 0 * * 1-5',
   $$
   select net.http_post(
     url := 'https://YOUR_PROJECT_REF.functions.supabase.co/build-daily-digest',
@@ -35,10 +35,10 @@ select cron.schedule(
   $$
 );
 
--- push-digest: weekdays at 12:00 UTC = 07:00 ET (winter) / 08:00 ET (summer)
+-- push-digest: weekdays at 01:00 UTC = 08:00 Asia/Bangkok
 select cron.schedule(
-  'push-digest-700et',
-  '0 12 * * 1-5',
+  'push-digest-bkk',
+  '0 1 * * 1-5',
   $$
   select net.http_post(
     url := 'https://YOUR_PROJECT_REF.functions.supabase.co/push-digest',

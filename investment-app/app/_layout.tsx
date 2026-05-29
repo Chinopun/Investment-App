@@ -11,7 +11,7 @@ export default function RootLayout() {
     (async () => {
       const granted = await ensureNotificationPermission();
       if (granted) {
-        await scheduleDailyDigestReminder(7, 5);
+        await scheduleDailyDigestReminder(8, 5);
         await registerBackgroundDigestRefresh();
       }
     })();

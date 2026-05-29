@@ -5,8 +5,8 @@ import { scheduleDailyDigestReminder } from '../../lib/notifications';
 import { usePortfolio } from '../../store/portfolio';
 
 export default function SettingsTab() {
-  const [notifyTime, setNotifyTime] = useState('07:00');
-  const [tz, setTz] = useState('America/New_York');
+  const [notifyTime, setNotifyTime] = useState('08:00');
+  const [tz, setTz] = useState('Asia/Bangkok');
   const { holdings, refresh, removeHolding } = usePortfolio();
 
   useEffect(() => {
