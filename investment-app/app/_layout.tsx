@@ -5,9 +5,12 @@ import {
   scheduleDailyDigestReminder,
   registerBackgroundDigestRefresh,
 } from '../lib/notifications';
+import { usePrivacy } from '../store/privacy';
 
 export default function RootLayout() {
   useEffect(() => {
+    // Restore the privacy toggle ASAP (before screens render values).
+    usePrivacy.getState().load();
     (async () => {
       const granted = await ensureNotificationPermission();
       if (granted) {

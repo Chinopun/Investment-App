@@ -9,6 +9,7 @@ import { AddHoldingModal } from '../../components/AddHoldingModal';
 import { EditHoldingModal } from '../../components/EditHoldingModal';
 import { format } from 'date-fns';
 import type { Holding } from '../../lib/types';
+import { usePrivacy, REDACTED } from '../../store/privacy';
 
 const POS = '#0a8a3f';
 const NEG = '#c83a3a';
@@ -18,6 +19,8 @@ const cur = (n: number) =>
 
 export default function PortfolioHome() {
   const { holdings, quotes, loading, refresh } = usePortfolio();
+  const hidden = usePrivacy((s) => s.hidden);
+  const togglePrivacy = usePrivacy((s) => s.toggle);
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Holding | null>(null);
   const router = useRouter();
@@ -80,8 +83,19 @@ export default function PortfolioHome() {
 
       {holdings.length > 0 && (
         <View style={styles.summary}>
-          <Text style={styles.totalLabel}>Total value</Text>
-          <Text style={styles.totalValue}>${cur(totals.totalValue)}</Text>
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Total value</Text>
+            <Pressable
+              onPress={togglePrivacy}
+              hitSlop={10}
+              style={({ pressed }) => [styles.eyeBtn, pressed && { opacity: 0.5 }]}
+            >
+              <Text style={styles.eyeText}>{hidden ? '👁  Show' : '🙈  Hide'}</Text>
+            </Pressable>
+          </View>
+          <Text style={styles.totalValue}>
+            {hidden ? REDACTED : `$${cur(totals.totalValue)}`}
+          </Text>
 
           <View style={styles.summaryRow}>
             <Text style={styles.metricLabel}>Today</Text>
@@ -89,7 +103,7 @@ export default function PortfolioHome() {
               {totals.dayPct != null ? `${sign(totals.dayPct)}${totals.dayPct.toFixed(2)}%` : '—'}
               {'   '}
               <Text style={[styles.metricValueAbs, { color: dayColor }]}>
-                {sign(totals.totalDay)}${cur(totals.totalDay)}
+                {hidden ? REDACTED : `${sign(totals.totalDay)}$${cur(totals.totalDay)}`}
               </Text>
             </Text>
           </View>
@@ -101,7 +115,7 @@ export default function PortfolioHome() {
                 {sign(totals.allTimePct!)}{totals.allTimePct!.toFixed(2)}%
                 {'   '}
                 <Text style={[styles.metricValueAbs, { color: allTimeColor }]}>
-                  {sign(totals.allTimeAbs)}${cur(totals.allTimeAbs)}
+                  {hidden ? REDACTED : `${sign(totals.allTimeAbs)}$${cur(totals.allTimeAbs)}`}
                 </Text>
               </Text>
             </View>
@@ -113,7 +127,12 @@ export default function PortfolioHome() {
         data={sortedHoldings}
         keyExtractor={(h) => h.id}
         renderItem={({ item }) => (
-          <PortfolioRow holding={item} quote={quotes[item.ticker]} onEdit={setEditing} />
+          <PortfolioRow
+            holding={item}
+            quote={quotes[item.ticker]}
+            onEdit={setEditing}
+            hidden={hidden}
+          />
         )}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} />}
         ListEmptyComponent={
@@ -147,7 +166,13 @@ const styles = StyleSheet.create({
   summary: {
     paddingHorizontal: 16, paddingBottom: 16, paddingTop: 8,
   },
+  totalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   totalLabel: { fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5 },
+  eyeBtn: {
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999,
+    backgroundColor: '#eef0f4',
+  },
+  eyeText: { fontSize: 12, color: '#444', fontWeight: '600' },
   totalValue: { fontSize: 30, fontWeight: '700', color: '#111', marginTop: 2 },
   summaryRow: {
     flexDirection: 'row', alignItems: 'baseline', marginTop: 6,

@@ -6,6 +6,7 @@ import { fetchQuotes, fetchChart, type ChartData } from '../../lib/prices';
 import { supabase } from '../../lib/supabase';
 import type { NewsArticle, Quote } from '../../lib/types';
 import { NewsCard } from '../../components/NewsCard';
+import { usePrivacy, REDACTED } from '../../store/privacy';
 
 type Range = '1d' | '5d' | '1mo';
 const RANGES: Range[] = ['1d', '5d', '1mo'];
@@ -21,6 +22,7 @@ export default function StockDetail() {
     '1d': null, '5d': null, '1mo': null,
   });
   const [news, setNews] = useState<NewsArticle[]>([]);
+  const hidden = usePrivacy((s) => s.hidden);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,11 +59,15 @@ export default function StockDetail() {
             <View style={{ padding: 16 }}>
               <Text style={styles.name}>{quote?.name ?? ''}</Text>
               <Text style={styles.price}>
-                {quote ? `$${quote.price.toFixed(2)}` : <ActivityIndicator />}
+                {quote
+                  ? (hidden ? REDACTED : `$${quote.price.toFixed(2)}`)
+                  : <ActivityIndicator />}
               </Text>
               {quote && (
                 <Text style={[styles.change, { color: positive ? POS : NEG }]}>
-                  {positive ? '+' : ''}{quote.change.toFixed(2)} ({quote.change_pct.toFixed(2)}%)
+                  {hidden
+                    ? `${positive ? '+' : ''}${quote.change_pct.toFixed(2)}%`
+                    : `${positive ? '+' : ''}${quote.change.toFixed(2)} (${quote.change_pct.toFixed(2)}%)`}
                   <Text style={styles.changeLabel}>  today</Text>
                 </Text>
               )}
@@ -117,7 +123,10 @@ export default function StockDetail() {
                   {activeChart.changePct >= 0 ? '+' : ''}{activeChart.changePct.toFixed(2)}%
                   {activeChart.changeAbs != null && (
                     <Text style={styles.periodSummaryAbs}>
-                      {'   '}{activeChart.changeAbs >= 0 ? '+' : ''}${Math.abs(activeChart.changeAbs).toFixed(2)}
+                      {'   '}
+                      {hidden
+                        ? REDACTED
+                        : `${activeChart.changeAbs >= 0 ? '+' : ''}$${Math.abs(activeChart.changeAbs).toFixed(2)}`}
                     </Text>
                   )}
                 </Text>
