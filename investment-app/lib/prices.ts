@@ -92,19 +92,41 @@ export async function searchTicker(q: string): Promise<TickerSearchHit[]> {
 // ---------- CHARTS ----------
 export type Candle = { t: number; close: number };
 
+export type ChartData = {
+  candles: Candle[];
+  changePct: number | null; // % change over the whole range
+  changeAbs: number | null; // absolute $ change over the whole range
+};
+
 export async function fetchChart(
   ticker: string,
   range: '1d' | '5d' | '1mo' = '1d',
-): Promise<Candle[]> {
+): Promise<ChartData> {
   const interval = range === '1d' ? '5m' : range === '5d' ? '30m' : '1d';
   const json = await tryHosts(
     `/v8/finance/chart/${encodeURIComponent(ticker.toUpperCase())}?range=${range}&interval=${interval}`,
   );
   const result = json?.chart?.result?.[0];
-  if (!result) return [];
+  if (!result) return { candles: [], changePct: null, changeAbs: null };
+
   const ts: number[] = result.timestamp ?? [];
   const closes: (number | null)[] = result.indicators?.quote?.[0]?.close ?? [];
-  return ts
+  const candles = ts
     .map((t, i) => ({ t, close: closes[i] ?? NaN }))
     .filter((c) => Number.isFinite(c.close));
+
+  // chartPreviousClose = the close immediately BEFORE the range starts, which is
+  // exactly the reference point we want for an N-day return calc.
+  const meta = result.meta ?? {};
+  const currentPrice = Number(meta.regularMarketPrice ?? candles[candles.length - 1]?.close ?? 0);
+  const startPrice = Number(meta.chartPreviousClose ?? candles[0]?.close ?? 0);
+
+  let changePct: number | null = null;
+  let changeAbs: number | null = null;
+  if (startPrice > 0 && currentPrice > 0) {
+    changeAbs = currentPrice - startPrice;
+    changePct = (changeAbs / startPrice) * 100;
+  }
+
+  return { candles, changePct, changeAbs };
 }
