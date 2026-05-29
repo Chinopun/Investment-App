@@ -80,10 +80,19 @@ alter table public.alert_log enable row level security;
 -- For a single-user personal app we authenticate via the anon key + a single user row.
 -- These policies allow the anon role to read/write their own data identified by users.email.
 -- Tighten this if you ever add real auth.
+drop policy if exists "anon read users" on public.users;
 create policy "anon read users" on public.users for select to anon using (true);
+
+drop policy if exists "anon read holdings" on public.holdings;
 create policy "anon read holdings" on public.holdings for select to anon using (true);
+
+drop policy if exists "anon write holdings" on public.holdings;
 create policy "anon write holdings" on public.holdings for all to anon using (true) with check (true);
+
+drop policy if exists "anon read news" on public.news_articles;
 create policy "anon read news" on public.news_articles for select to anon using (true);
+
+drop policy if exists "anon read digests" on public.daily_digests;
 create policy "anon read digests" on public.daily_digests for select to anon using (true);
 
 -- ---------- helper: ensure a default user exists ----------
