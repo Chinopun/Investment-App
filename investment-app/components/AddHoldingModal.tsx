@@ -4,10 +4,12 @@ import {
 } from 'react-native';
 import { searchTicker, type TickerSearchHit } from '../lib/prices';
 import { usePortfolio } from '../store/portfolio';
+import { useTheme } from '../lib/theme';
 
 type Props = { visible: boolean; onClose: () => void };
 
 export function AddHoldingModal({ visible, onClose }: Props) {
+  const { colors } = useTheme();
   const [query, setQuery] = useState('');
   const [hits, setHits] = useState<TickerSearchHit[]>([]);
   const [selected, setSelected] = useState<TickerSearchHit | null>(null);
@@ -42,18 +44,27 @@ export function AddHoldingModal({ visible, onClose }: Props) {
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.header}>
-          <Pressable onPress={() => { reset(); onClose(); }}><Text style={styles.cancel}>Cancel</Text></Pressable>
-          <Text style={styles.title}>Add holding</Text>
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: colors.bg }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={[styles.header, { borderBottomColor: colors.border, backgroundColor: colors.bgRaised }]}>
+          <Pressable onPress={() => { reset(); onClose(); }}>
+            <Text style={[styles.cancel, { color: colors.accent }]}>Cancel</Text>
+          </Pressable>
+          <Text style={[styles.title, { color: colors.text }]}>Add holding</Text>
           <Pressable onPress={submit} disabled={!selected}>
-            <Text style={[styles.save, !selected && { opacity: 0.4 }]}>Add</Text>
+            <Text style={[styles.save, { color: colors.accent }, !selected && { opacity: 0.4 }]}>Add</Text>
           </Pressable>
         </View>
-        <View style={{ padding: 16 }}>
+        <View style={{ padding: 16, flex: 1 }}>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text },
+            ]}
             placeholder="Search ticker or company (AAPL, Nvidia, ...)"
+            placeholderTextColor={colors.textMuted}
             value={selected ? selected.symbol : query}
             onChangeText={(t) => { setSelected(null); setQuery(t); }}
             autoCapitalize="characters"
@@ -65,9 +76,12 @@ export function AddHoldingModal({ visible, onClose }: Props) {
               keyExtractor={(i) => i.symbol}
               keyboardShouldPersistTaps="handled"
               renderItem={({ item }) => (
-                <Pressable style={styles.hit} onPress={() => setSelected(item)}>
-                  <Text style={styles.hitSym}>{item.symbol}</Text>
-                  <Text style={styles.hitName} numberOfLines={1}>
+                <Pressable
+                  style={[styles.hit, { borderBottomColor: colors.borderLight }]}
+                  onPress={() => setSelected(item)}
+                >
+                  <Text style={[styles.hitSym, { color: colors.accent }]}>{item.symbol}</Text>
+                  <Text style={[styles.hitName, { color: colors.textSecondary }]} numberOfLines={1}>
                     {item.shortname ?? item.longname}
                   </Text>
                 </Pressable>
@@ -76,10 +90,24 @@ export function AddHoldingModal({ visible, onClose }: Props) {
           )}
           {selected && (
             <View style={{ marginTop: 16 }}>
-              <Text style={styles.label}>Shares (optional)</Text>
-              <TextInput style={styles.input} value={shares} onChangeText={setShares} keyboardType="decimal-pad" placeholder="0" />
-              <Text style={styles.label}>Cost basis per share (optional)</Text>
-              <TextInput style={styles.input} value={cost} onChangeText={setCost} keyboardType="decimal-pad" placeholder="0.00" />
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Shares (optional)</Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
+                value={shares}
+                onChangeText={setShares}
+                keyboardType="decimal-pad"
+                placeholder="0"
+                placeholderTextColor={colors.textMuted}
+              />
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Cost basis per share (optional)</Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
+                value={cost}
+                onChangeText={setCost}
+                keyboardType="decimal-pad"
+                placeholder="0.00"
+                placeholderTextColor={colors.textMuted}
+              />
             </View>
           )}
         </View>
@@ -92,18 +120,17 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#e2e4e9',
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   title: { fontSize: 16, fontWeight: '600' },
-  cancel: { color: '#0a84ff', fontSize: 16 },
-  save: { color: '#0a84ff', fontSize: 16, fontWeight: '600' },
+  cancel: { fontSize: 16 },
+  save: { fontSize: 16, fontWeight: '600' },
   input: {
-    borderWidth: 1, borderColor: '#dcdfe5', borderRadius: 10,
+    borderWidth: 1, borderRadius: 10,
     paddingHorizontal: 12, paddingVertical: 10, fontSize: 16, marginBottom: 8,
-    backgroundColor: '#fff',
   },
-  label: { fontSize: 13, color: '#666', marginTop: 8, marginBottom: 4 },
-  hit: { paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#eee' },
-  hitSym: { fontWeight: '700', color: '#0a84ff' },
-  hitName: { color: '#555', fontSize: 13, marginTop: 2 },
+  label: { fontSize: 13, marginTop: 8, marginBottom: 4 },
+  hit: { paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  hitSym: { fontWeight: '700' },
+  hitName: { fontSize: 13, marginTop: 2 },
 });

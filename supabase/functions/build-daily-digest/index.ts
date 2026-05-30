@@ -10,6 +10,13 @@ import { adminClient } from '../_shared/db.ts';
 import { fetchServerQuotes } from '../_shared/yahooPrice.ts';
 import { buildDigest } from '../_shared/ai.ts';
 
+// Only let the AI see headlines from credible outlets — strip social-media chatter
+// (Reddit, StockTwits) so the model isn't tempted to weight rumor.
+const CREDIBLE_SOURCES = new Set([
+  'finnhub', 'yahoo', 'yahoo-rss', 'marketaux', 'alphavantage', 'newsapi',
+  'google-news', 'marketwatch', 'cnbc', 'reuters', 'seekingalpha', 'sec-edgar',
+]);
+
 Deno.serve(async (_req) => {
   const sb = adminClient();
   const today = new Date().toISOString().slice(0, 10);
@@ -41,8 +48,9 @@ Deno.serve(async (_req) => {
       change_pct: qMap[h.ticker]?.change_pct,
       headlines: (news ?? [])
         .filter((n) => n.ticker === h.ticker)
-        .slice(0, 8)
-        .map((n) => ({ headline: n.headline, source: n.source, snippet: n.body_snippet ?? '' })),
+        .filter((n) => CREDIBLE_SOURCES.has(n.source))
+        .slice(0, 12)
+        .map((n) => ({ headline: n.headline, snippet: n.body_snippet ?? '' })),
     }));
 
     let digest = await buildDigest({ date: today, perTicker });
@@ -54,7 +62,7 @@ Deno.serve(async (_req) => {
       const body_md = `# Morning digest — ${today}\n\n` + perTicker.map((t) =>
         `## ${t.ticker} — ${t.name ?? ''}\n` +
         (t.change_pct != null ? `Overnight: ${t.change_pct.toFixed(2)}%\n\n` : '') +
-        t.headlines.map((h) => `- (${h.source}) ${h.headline}`).join('\n')
+        t.headlines.map((h) => `- ${h.headline}`).join('\n')
       ).join('\n\n');
       digest = { subject_line: subject.slice(0, 200), body_md };
     }

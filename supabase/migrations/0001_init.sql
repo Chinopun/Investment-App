@@ -97,4 +97,4 @@ create policy "anon read digests" on public.daily_digests for select to anon usi
 
 -- ---------- helper: ensure a default user exists ----------
 -- After running migrations, insert your row once:
---   insert into public.users (email) values ('virojns@gmail.com') on conflict do nothing;
+--   insert into public.users (email) values ('chinopun2008@gmail.com') on conflict do nothing;

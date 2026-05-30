@@ -2,10 +2,27 @@
 
 Personal iPhone app that tracks your stock holdings, aggregates news from ~13 free sources, summarizes the overnight news with AI every morning, and emails you a digest + breaking-news alerts (the emails *are* the iPhone notifications). Tapping a button in the email deep-links into the app's detail screens.
 
+## Features
+
+- **Portfolio home** — live quotes (Yahoo Finance `/v8/finance/chart`), holdings sorted by current value, total + per-position All-time % / abs and Today % / abs.
+- **Privacy toggle** — single tap masks every position-level dollar amount across the app (per-share prices stay visible). Persisted in Secure Store.
+- **Light / Dark / Auto theme** — pick one in Settings; "Auto" follows the iOS system setting.
+- **Add / edit holdings** — tap a row to drill into details, tap the row's pencil icon to edit shares, cost basis, and per-stock breaking-news alerts.
+- **Stock detail** — current price + change, embedded SVG chart for 1d / 5d / 1mo with each range's % change shown on its pill, and a feed of recent news for that ticker.
+- **Morning digest** — AI-curated brief (Gemini, with Groq fallback) emailed at your preferred time. Materiality-bar prompt: only flags earnings, M&A, regulatory actions, material analyst calls, and >2% moves with a catalyst. Never cites news sources.
+- **Breaking-news alerts** — separate emails throughout the day for impactful items (keyword + AI sentiment scored).
+- **News aggregation** — every 30 min from Finnhub, Yahoo, Marketaux, Alpha Vantage, NewsAPI, Google News RSS, MarketWatch, CNBC, Reuters, Seeking Alpha, SEC EDGAR, StockTwits, and Reddit. Per-source rate-limit scheduling so daily-quota APIs (Marketaux, NewsAPI, Alpha Vantage) stay comfortably inside their free tiers.
+
 ```
 Investment Information App/
 ├── investment-app/   ← Expo React Native app (runs in Expo Go on your iPhone)
+│   ├── app/          ← screens (expo-router): tabs, stock/[ticker], digest/[date]
+│   ├── components/   ← PortfolioRow, NewsCard, AddHoldingModal, EditHoldingModal
+│   ├── lib/          ← theme, prices (Yahoo), supabase client, notifications
+│   └── store/        ← Zustand: portfolio, privacy, theme
 └── supabase/         ← Schema, cron schedule, Edge Functions (news + AI + email)
+    ├── functions/    ← fetch-news, build-daily-digest, push-digest, breaking-news-watcher
+    └── migrations/   ← 0001_init.sql
 ```
 
 ---
@@ -58,7 +75,7 @@ supabase link --project-ref YOUR_PROJECT_REF
 supabase db push
 
 # Insert your user row (this is the one row of personal-app state)
-supabase db query "insert into public.users (email) values ('virojns@gmail.com') on conflict do nothing;"
+supabase db query "insert into public.users (email) values ('chinopun2008@gmail.com') on conflict do nothing;"
 
 # Store API keys as function secrets
 supabase secrets set \

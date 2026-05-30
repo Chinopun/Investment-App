@@ -9,6 +9,7 @@ type State = {
   loading: boolean;
   refresh: () => Promise<void>;
   addHolding: (h: { ticker: string; name?: string; shares?: number; cost_basis?: number }) => Promise<void>;
+  updateHolding: (id: string, patch: { shares?: number | null; cost_basis?: number | null; alert_breaking?: boolean }) => Promise<void>;
   removeHolding: (id: string) => Promise<void>;
 };
 
@@ -56,6 +57,16 @@ export const usePortfolio = create<State>((set, get) => ({
       shares: shares ?? null,
       cost_basis: cost_basis ?? null,
     });
+    await get().refresh();
+  },
+
+  updateHolding: async (id, patch) => {
+    const update: Record<string, unknown> = {};
+    if ('shares' in patch) update.shares = patch.shares;
+    if ('cost_basis' in patch) update.cost_basis = patch.cost_basis;
+    if ('alert_breaking' in patch) update.alert_breaking = patch.alert_breaking;
+    if (Object.keys(update).length === 0) return;
+    await supabase.from('holdings').update(update).eq('id', id);
     await get().refresh();
   },
 

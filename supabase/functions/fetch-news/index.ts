@@ -37,17 +37,41 @@ Deno.serve(async (_req) => {
   const uniq: Record<string, string | undefined> = {};
   for (const h of holdings ?? []) uniq[h.ticker] = h.name ?? undefined;
 
+  // ---- Rate-limited source scheduling ----------------------------------
+  // The base cron runs every 30 min. With 13 holdings, the small-quota sources
+  // can't be called every run. We gate them by current UTC time so a single
+  // user's portfolio stays comfortably inside each provider's free tier:
+  //
+  //  - Marketaux  (100/day):  every 4 hours    → 6 sweeps × 13 = 78 req/day
+  //  - NewsAPI    (100/day):  every 4 hours    → 78 req/day (offset by 2h)
+  //  - AlphaVantage (25/day): 1 ticker per run, rotated → 24 req/day
+  const now = new Date();
+  const utcHour = now.getUTCHours();
+  const utcMinute = now.getUTCMinutes();
+  const isTopOfHour = utcMinute < 5;
+  const runMarketaux  = isTopOfHour && (utcHour % 4 === 0);   // 00, 04, 08, 12, 16, 20 UTC
+  const runNewsApi    = isTopOfHour && (utcHour % 4 === 2);   // 02, 06, 10, 14, 18, 22 UTC
+  const runAlphaVantage = isTopOfHour;                         // hourly, but 1 ticker only
+
+  const allTickers = Object.keys(uniq).sort();
+  const avTicker = runAlphaVantage && allTickers.length > 0
+    ? allTickers[utcHour % allTickers.length]
+    : null;
+
   let inserted = 0;
   const perSource: Record<string, number> = {};
+  const skipped: string[] = [];
+  if (!runMarketaux)    skipped.push('marketaux (next at next %4 hour)');
+  if (!runNewsApi)      skipped.push('newsapi (next at next (%4==2) hour)');
+  if (!runAlphaVantage) skipped.push('alphavantage (top-of-hour only)');
 
   for (const [ticker, name] of Object.entries(uniq)) {
-    const results = await Promise.allSettled([
+    // Always-on sources: Finnhub has plenty of headroom (60 req/min, no daily cap),
+    // Yahoo is unofficial but reliable, RSS feeds are unmetered.
+    const promises: Array<Promise<RawArticle[]>> = [
       fetchFinnhub(ticker),
       fetchYahoo(ticker),
       fetchYahooRss(ticker),
-      fetchMarketaux(ticker),
-      fetchAlphaVantage(ticker),   // sparingly — has tight rate limit
-      fetchNewsApi(ticker, name),
       fetchGoogleNews(ticker, name),
       fetchMarketWatchRss(ticker, name),
       fetchCnbcRss(ticker, name),
@@ -56,7 +80,12 @@ Deno.serve(async (_req) => {
       fetchSecEdgar(ticker),
       fetchStockTwits(ticker),
       fetchRedditRss(ticker, name),
-    ]);
+    ];
+    if (runMarketaux) promises.push(fetchMarketaux(ticker));
+    if (runNewsApi) promises.push(fetchNewsApi(ticker, name));
+    if (avTicker === ticker) promises.push(fetchAlphaVantage(ticker));
+
+    const results = await Promise.allSettled(promises);
 
     const all: RawArticle[] = [];
     for (const r of results) {
@@ -88,7 +117,18 @@ Deno.serve(async (_req) => {
     else inserted += count ?? 0;
   }
 
-  return new Response(JSON.stringify({ ok: true, inserted, perSource }), {
+  return new Response(JSON.stringify({
+    ok: true,
+    inserted,
+    perSource,
+    scheduling: {
+      runMarketaux,
+      runNewsApi,
+      runAlphaVantage,
+      avTicker,
+      skipped,
+    },
+  }), {
     headers: { 'Content-Type': 'application/json' },
   });
 });

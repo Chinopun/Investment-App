@@ -4,10 +4,12 @@ import { useFocusEffect } from 'expo-router';
 import { supabase, getCurrentUserId } from '../../lib/supabase';
 import type { NewsArticle } from '../../lib/types';
 import { NewsCard } from '../../components/NewsCard';
+import { useTheme } from '../../lib/theme';
 
 export default function NewsTab() {
   const [items, setItems] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(false);
+  const { colors } = useTheme();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -33,20 +35,24 @@ export default function NewsTab() {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f8f9fb' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <View style={styles.header}>
-        <Text style={styles.title}>News</Text>
-        <Text style={styles.sub}>Updates every 15 min across all sources</Text>
+        <Text style={[styles.title, { color: colors.text }]}>News</Text>
+        <Text style={[styles.sub, { color: colors.textMuted }]}>
+          Updates every 30 min across all sources
+        </Text>
       </View>
       <FlatList
         data={items}
         keyExtractor={(n) => n.id}
         renderItem={({ item }) => <NewsCard article={item} />}
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={load} />}
+        refreshControl={
+          <RefreshControl refreshing={loading} onRefresh={load} tintColor={colors.textSecondary} />
+        }
         ListEmptyComponent={
           <View style={{ padding: 24 }}>
-            <Text style={{ color: '#666', textAlign: 'center' }}>
-              No news yet. Add a holding from the Portfolio tab and the feed will populate within 15 minutes.
+            <Text style={{ color: colors.textSecondary, textAlign: 'center' }}>
+              No news yet. Add a holding from the Portfolio tab and the feed will populate within 30 minutes.
             </Text>
           </View>
         }
@@ -57,6 +63,6 @@ export default function NewsTab() {
 
 const styles = StyleSheet.create({
   header: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 12 },
-  title: { fontSize: 28, fontWeight: '700', color: '#111' },
-  sub: { fontSize: 13, color: '#888', marginTop: 2 },
+  title: { fontSize: 28, fontWeight: '700' },
+  sub: { fontSize: 13, marginTop: 2 },
 });
