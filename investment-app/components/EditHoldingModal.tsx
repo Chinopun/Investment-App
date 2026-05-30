@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import type { Holding } from '../lib/types';
 import { usePortfolio } from '../store/portfolio';
+import { useTheme } from '../lib/theme';
 
 type Props = {
   holding: Holding | null;
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export function EditHoldingModal({ holding, onClose }: Props) {
+  const { colors } = useTheme();
   const updateHolding = usePortfolio((s) => s.updateHolding);
   const removeHolding = usePortfolio((s) => s.removeHolding);
   const [shares, setShares] = useState('');
@@ -59,37 +61,57 @@ export function EditHoldingModal({ holding, onClose }: Props) {
 
   return (
     <Modal visible={!!holding} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={styles.header}>
-          <Pressable onPress={onClose}><Text style={styles.cancel}>Cancel</Text></Pressable>
-          <Text style={styles.title}>Edit {holding.ticker}</Text>
-          <Pressable onPress={save}><Text style={styles.save}>Save</Text></Pressable>
+      <KeyboardAvoidingView
+        style={{ flex: 1, backgroundColor: colors.bg }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={[styles.header, { borderBottomColor: colors.border, backgroundColor: colors.bgRaised }]}>
+          <Pressable onPress={onClose}>
+            <Text style={[styles.cancel, { color: colors.accent }]}>Cancel</Text>
+          </Pressable>
+          <Text style={[styles.title, { color: colors.text }]}>Edit {holding.ticker}</Text>
+          <Pressable onPress={save}>
+            <Text style={[styles.save, { color: colors.accent }]}>Save</Text>
+          </Pressable>
         </View>
         <View style={{ padding: 16 }}>
-          <Text style={styles.subtitle} numberOfLines={1}>{holding.name ?? ''}</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]} numberOfLines={1}>
+            {holding.name ?? ''}
+          </Text>
 
-          <Text style={styles.label}>Shares held</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Shares held</Text>
           <TextInput
-            style={styles.input} value={shares} onChangeText={setShares}
-            keyboardType="decimal-pad" placeholder="0" autoFocus
+            style={[styles.input, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
+            value={shares}
+            onChangeText={setShares}
+            keyboardType="decimal-pad"
+            placeholder="0"
+            placeholderTextColor={colors.textMuted}
+            autoFocus
           />
 
-          <Text style={styles.label}>Cost basis per share (USD)</Text>
+          <Text style={[styles.label, { color: colors.textSecondary }]}>Cost basis per share (USD)</Text>
           <TextInput
-            style={styles.input} value={cost} onChangeText={setCost}
-            keyboardType="decimal-pad" placeholder="0.00"
+            style={[styles.input, { backgroundColor: colors.inputBg, borderColor: colors.inputBorder, color: colors.text }]}
+            value={cost}
+            onChangeText={setCost}
+            keyboardType="decimal-pad"
+            placeholder="0.00"
+            placeholderTextColor={colors.textMuted}
           />
 
-          <View style={styles.toggleRow}>
+          <View style={[styles.toggleRow, { borderTopColor: colors.border }]}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.toggleLabel}>Breaking-news alerts</Text>
-              <Text style={styles.toggleHint}>Email me when impactful news lands for this ticker</Text>
+              <Text style={[styles.toggleLabel, { color: colors.text }]}>Breaking-news alerts</Text>
+              <Text style={[styles.toggleHint, { color: colors.textMuted }]}>
+                Email me when impactful news lands for this ticker
+              </Text>
             </View>
             <Switch value={alertBreaking} onValueChange={setAlertBreaking} />
           </View>
 
           <Pressable onPress={confirmDelete} style={styles.deleteBtn}>
-            <Text style={styles.deleteText}>Remove from portfolio</Text>
+            <Text style={[styles.deleteText, { color: colors.neg }]}>Remove from portfolio</Text>
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -101,24 +123,24 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#e2e4e9',
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   title: { fontSize: 16, fontWeight: '600' },
-  cancel: { color: '#0a84ff', fontSize: 16 },
-  save: { color: '#0a84ff', fontSize: 16, fontWeight: '600' },
-  subtitle: { fontSize: 14, color: '#666', marginBottom: 8 },
-  label: { fontSize: 12, color: '#888', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 12, marginBottom: 4 },
+  cancel: { fontSize: 16 },
+  save: { fontSize: 16, fontWeight: '600' },
+  subtitle: { fontSize: 14, marginBottom: 8 },
+  label: { fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 12, marginBottom: 4 },
   input: {
-    borderWidth: 1, borderColor: '#dcdfe5', borderRadius: 10,
-    paddingHorizontal: 12, paddingVertical: 10, fontSize: 16, backgroundColor: '#fff',
+    borderWidth: 1, borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 10, fontSize: 16,
   },
   toggleRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingVertical: 14, marginTop: 12,
-    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#e2e4e9',
+    borderTopWidth: StyleSheet.hairlineWidth,
   },
   toggleLabel: { fontSize: 15, fontWeight: '500' },
-  toggleHint: { fontSize: 12, color: '#888', marginTop: 2 },
+  toggleHint: { fontSize: 12, marginTop: 2 },
   deleteBtn: { marginTop: 32, padding: 14, alignItems: 'center' },
-  deleteText: { color: '#c83a3a', fontSize: 15, fontWeight: '600' },
+  deleteText: { fontSize: 15, fontWeight: '600' },
 });
