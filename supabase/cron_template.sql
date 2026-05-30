@@ -19,10 +19,10 @@ select cron.schedule(
   $$
 );
 
--- build-daily-digest: weekdays at 00:30 UTC = 07:30 Asia/Bangkok
+-- build-daily-digest: every day at 00:30 UTC = 07:30 Asia/Bangkok
 select cron.schedule(
   'build-digest-bkk',
-  '30 0 * * 1-5',
+  '30 0 * * *',
   $$
   select net.http_post(
     url := 'https://YOUR_PROJECT_REF.functions.supabase.co/build-daily-digest',
@@ -35,10 +35,10 @@ select cron.schedule(
   $$
 );
 
--- push-digest: weekdays at 01:00 UTC = 08:00 Asia/Bangkok
+-- push-digest: every day at 01:00 UTC = 08:00 Asia/Bangkok
 select cron.schedule(
   'push-digest-bkk',
-  '0 1 * * 1-5',
+  '0 1 * * *',
   $$
   select net.http_post(
     url := 'https://YOUR_PROJECT_REF.functions.supabase.co/push-digest',
