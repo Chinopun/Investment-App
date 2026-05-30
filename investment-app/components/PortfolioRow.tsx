@@ -12,9 +12,10 @@ type Props = {
 
 const POS = '#0a8a3f';
 const NEG = '#c83a3a';
-const sign = (n: number) => (n >= 0 ? '+' : '');
+const sign = (n: number) => (n >= 0 ? '+' : '-');
 const cur = (n: number) =>
   Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pct = (n: number) => Math.abs(n).toFixed(2);
 
 export function PortfolioRow({ holding, quote, onEdit, hidden = false }: Props) {
   const router = useRouter();
@@ -49,7 +50,7 @@ export function PortfolioRow({ holding, quote, onEdit, hidden = false }: Props) 
           </Text>
           {shares != null && (
             <Text style={styles.shares} numberOfLines={1}>
-              {shares} sh{cost != null && (hidden ? ` @ ${REDACTED}` : ` @ $${cost.toFixed(2)}`)}
+              {shares} sh{cost != null && ` @ $${cost.toFixed(2)}`}
             </Text>
           )}
         </View>
@@ -58,7 +59,7 @@ export function PortfolioRow({ holding, quote, onEdit, hidden = false }: Props) 
         <View style={styles.right}>
           {/* All-time (primary) */}
           <Text style={[styles.allTimePct, { color: allTimeColor }]} numberOfLines={1}>
-            {allTimePct == null ? '—' : `${sign(allTimePct)}${allTimePct.toFixed(2)}%`}
+            {allTimePct == null ? '—' : `${sign(allTimePct)}${pct(allTimePct)}%`}
           </Text>
           <Text style={[styles.allTimeAbs, { color: allTimeColor }]} numberOfLines={1}>
             {allTimeAbs == null
@@ -75,7 +76,7 @@ export function PortfolioRow({ holding, quote, onEdit, hidden = false }: Props) 
             {dayPct == null
               ? <Text style={styles.inlineLabel}>today</Text>
               : <>
-                  {sign(dayPct)}{dayPct.toFixed(2)}%
+                  {sign(dayPct)}{pct(dayPct)}%
                   {dayAbs != null && `  ${hidden ? REDACTED : `${sign(dayAbs)}$${cur(dayAbs)}`}`}
                   <Text style={styles.inlineLabel}>  today</Text>
                 </>
@@ -88,7 +89,7 @@ export function PortfolioRow({ holding, quote, onEdit, hidden = false }: Props) 
             {price != null && (
               <>
                 <Text style={styles.inlineLabel}>  ·  </Text>
-                <Text style={styles.stockPrice}>{hidden ? REDACTED : `$${cur(price)}`}</Text>
+                <Text style={styles.stockPrice}>${cur(price)}</Text>
                 <Text style={styles.inlineLabel}>/sh</Text>
               </>
             )}

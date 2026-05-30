@@ -13,9 +13,10 @@ import { usePrivacy, REDACTED } from '../../store/privacy';
 
 const POS = '#0a8a3f';
 const NEG = '#c83a3a';
-const sign = (n: number) => (n >= 0 ? '+' : '');
+const sign = (n: number) => (n >= 0 ? '+' : '-');
 const cur = (n: number) =>
   Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pct = (n: number) => Math.abs(n).toFixed(2);
 
 export default function PortfolioHome() {
   const { holdings, quotes, loading, refresh } = usePortfolio();
@@ -100,7 +101,7 @@ export default function PortfolioHome() {
           <View style={styles.summaryRow}>
             <Text style={styles.metricLabel}>Today</Text>
             <Text style={[styles.metricValue, { color: dayColor }]}>
-              {totals.dayPct != null ? `${sign(totals.dayPct)}${totals.dayPct.toFixed(2)}%` : '—'}
+              {totals.dayPct != null ? `${sign(totals.dayPct)}${pct(totals.dayPct)}%` : '—'}
               {'   '}
               <Text style={[styles.metricValueAbs, { color: dayColor }]}>
                 {hidden ? REDACTED : `${sign(totals.totalDay)}$${cur(totals.totalDay)}`}
@@ -112,7 +113,7 @@ export default function PortfolioHome() {
             <View style={styles.summaryRow}>
               <Text style={styles.metricLabel}>All time</Text>
               <Text style={[styles.metricValue, { color: allTimeColor }]}>
-                {sign(totals.allTimePct!)}{totals.allTimePct!.toFixed(2)}%
+                {sign(totals.allTimePct!)}{pct(totals.allTimePct!)}%
                 {'   '}
                 <Text style={[styles.metricValueAbs, { color: allTimeColor }]}>
                   {hidden ? REDACTED : `${sign(totals.allTimeAbs)}$${cur(totals.allTimeAbs)}`}
