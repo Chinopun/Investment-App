@@ -7,7 +7,10 @@ type State = {
   holdings: Holding[];
   quotes: Record<string, Quote>;
   loading: boolean;
-  refresh: () => Promise<void>;
+  // silent=true → don't toggle the `loading` flag. Used for focus-triggered
+  // refreshes so the RefreshControl spinner doesn't briefly reserve space at
+  // the top of the FlatList and leave a phantom gap until the next scroll.
+  refresh: (silent?: boolean) => Promise<void>;
   addHolding: (h: { ticker: string; name?: string; shares?: number; cost_basis?: number }) => Promise<void>;
   updateHolding: (id: string, patch: { shares?: number | null; cost_basis?: number | null; alert_breaking?: boolean }) => Promise<void>;
   removeHolding: (id: string) => Promise<void>;
@@ -18,11 +21,14 @@ export const usePortfolio = create<State>((set, get) => ({
   quotes: {},
   loading: false,
 
-  refresh: async () => {
-    set({ loading: true });
+  refresh: async (silent = false) => {
+    if (!silent) set({ loading: true });
     try {
       const userId = await getCurrentUserId();
-      if (!userId) { set({ holdings: [], quotes: {}, loading: false }); return; }
+      if (!userId) {
+        set({ holdings: [], quotes: {}, loading: false });
+        return;
+      }
       const { data, error } = await supabase
         .from('holdings')
         .select('*')

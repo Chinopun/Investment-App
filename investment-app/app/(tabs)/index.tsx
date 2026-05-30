@@ -26,7 +26,9 @@ export default function PortfolioHome() {
   const router = useRouter();
   const { colors } = useTheme();
 
-  useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
+  // Silent on focus so the RefreshControl doesn't briefly push the list down
+  // and leave a phantom gap above the holdings until you scroll.
+  useFocusEffect(useCallback(() => { refresh(true); }, [refresh]));
 
   const totals = useMemo(() => {
     let totalValue = 0;
@@ -139,7 +141,11 @@ export default function PortfolioHome() {
           />
         )}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.textSecondary} />
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={() => refresh(false)}
+            tintColor={colors.textSecondary}
+          />
         }
         ListEmptyComponent={
           <View style={styles.empty}>

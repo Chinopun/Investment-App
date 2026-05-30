@@ -114,7 +114,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'stretch',
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  main: { flex: 1, flexDirection: 'row', paddingVertical: 10, paddingHorizontal: 14 },
+  main: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center', // vertically center the left column relative to the taller right column
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
   ticker: { fontSize: 16, fontWeight: '700' },
   name: { fontSize: 12, marginTop: 1 },
   shares: { fontSize: 11, marginTop: 2 },

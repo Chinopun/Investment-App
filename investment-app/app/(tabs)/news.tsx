@@ -11,8 +11,10 @@ export default function NewsTab() {
   const [loading, setLoading] = useState(false);
   const { colors } = useTheme();
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  // silent=true on focus refreshes so the RefreshControl spinner doesn't
+  // reserve space at the top and leave a gap until the next scroll.
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const userId = await getCurrentUserId();
       if (!userId) { setItems([]); return; }
@@ -28,11 +30,11 @@ export default function NewsTab() {
       if (error) throw error;
       setItems((data ?? []) as NewsArticle[]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(useCallback(() => { load(true); }, [load]));
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -47,7 +49,11 @@ export default function NewsTab() {
         keyExtractor={(n) => n.id}
         renderItem={({ item }) => <NewsCard article={item} />}
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={load} tintColor={colors.textSecondary} />
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={() => load(false)}
+            tintColor={colors.textSecondary}
+          />
         }
         ListEmptyComponent={
           <View style={{ padding: 24 }}>
