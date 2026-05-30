@@ -11,7 +11,7 @@ export async function fetchRedditRss(ticker: string, name?: string): Promise<Raw
   for (const sub of SUBS) {
     const url = `https://www.reddit.com/r/${sub}/search.rss?q=${encodeURIComponent(q)}&restrict_sr=on&sort=new&t=day`;
     try {
-      const items = await fetchRss(url, { headers: { 'User-Agent': 'InvestmentApp/0.1 by virojns' } });
+      const items = await fetchRss(url, { headers: { 'User-Agent': 'InvestmentApp/0.1 by chinopun' } });
       for (const i of items.slice(0, 10)) {
         out.push({
           ticker,

@@ -17,7 +17,7 @@ export const supabase = createClient(url, anon, {
 // The personal-app convention: a single user row keyed by email.
 // Set EXPO_PUBLIC_USER_EMAIL in .env to match the row you inserted after running migrations.
 export const USER_EMAIL =
-  process.env.EXPO_PUBLIC_USER_EMAIL ?? 'virojns@gmail.com';
+  process.env.EXPO_PUBLIC_USER_EMAIL ?? 'chinopun2008@gmail.com';
 
 export async function getCurrentUserId(): Promise<string | null> {
   const { data, error } = await supabase

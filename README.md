@@ -58,7 +58,7 @@ supabase link --project-ref YOUR_PROJECT_REF
 supabase db push
 
 # Insert your user row (this is the one row of personal-app state)
-supabase db query "insert into public.users (email) values ('virojns@gmail.com') on conflict do nothing;"
+supabase db query "insert into public.users (email) values ('chinopun2008@gmail.com') on conflict do nothing;"
 
 # Store API keys as function secrets
 supabase secrets set \

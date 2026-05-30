@@ -13,7 +13,7 @@ async function getCik(ticker: string): Promise<string | null> {
   if (!tickerToCik) {
     try {
       const res = await fetch('https://www.sec.gov/files/company_tickers.json', {
-        headers: { 'User-Agent': 'InvestmentApp virojns@gmail.com' },
+        headers: { 'User-Agent': 'InvestmentApp chinopun2008@gmail.com' },
       });
       if (!res.ok) return null;
       const json = await res.json();
@@ -34,7 +34,7 @@ export async function fetchSecEdgar(ticker: string): Promise<RawArticle[]> {
   if (!cik) return [];
   const url = `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${cik}&type=&dateb=&owner=include&count=10&output=atom`;
   try {
-    const items = await fetchRss(url, { headers: { 'User-Agent': 'InvestmentApp virojns@gmail.com' } });
+    const items = await fetchRss(url, { headers: { 'User-Agent': 'InvestmentApp chinopun2008@gmail.com' } });
     return items.slice(0, 10).map((i) => ({
       ticker,
       source: 'sec-edgar',
