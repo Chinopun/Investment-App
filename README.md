@@ -1,21 +1,23 @@
 # Investment Information App
 
-Personal iPhone app that tracks your stock holdings, aggregates news from ~13 free sources, summarizes the overnight news with AI every morning, and emails you a digest + breaking-news alerts (the emails *are* the iPhone notifications). Tapping a button in the email deep-links into the app's detail screens.
+A personal iOS application for tracking stock holdings. It aggregates news from 13 free sources, summarizes overnight coverage with AI each morning, and delivers a daily digest plus breaking-news alerts by email — the emails serve as the iPhone notifications. Call-to-action buttons in each email deep-link directly into the app's detail screens.
 
 ## Features
 
-- **Portfolio home** — live quotes (Yahoo Finance `/v8/finance/chart`), holdings sorted by current value, total + per-position All-time % / abs and Today % / abs.
-- **Privacy toggle** — single tap masks every position-level dollar amount across the app (per-share prices stay visible). Persisted in Secure Store.
-- **Light / Dark / Auto theme** — pick one in Settings; "Auto" follows the iOS system setting.
-- **Add / edit holdings** — tap a row to drill into details, tap the row's pencil icon to edit shares, cost basis, and per-stock breaking-news alerts.
-- **Stock detail** — current price + change, embedded SVG chart for 1d / 5d / 1mo with each range's % change shown on its pill, and a feed of recent news for that ticker.
-- **Morning digest** — AI-curated brief (Gemini, with Groq fallback) emailed at your preferred time. Materiality-bar prompt: only flags earnings, M&A, regulatory actions, material analyst calls, and >2% moves with a catalyst. Never cites news sources.
-- **Breaking-news alerts** — separate emails throughout the day for impactful items (keyword + AI sentiment scored).
-- **News aggregation** — every 30 min from Finnhub, Yahoo, Marketaux, Alpha Vantage, NewsAPI, Google News RSS, MarketWatch, CNBC, Reuters, Seeking Alpha, SEC EDGAR, StockTwits, and Reddit. Per-source rate-limit scheduling so daily-quota APIs (Marketaux, NewsAPI, Alpha Vantage) stay comfortably inside their free tiers.
+- **Portfolio home** — live quotes (Yahoo Finance `/v8/finance/chart`), holdings sorted by current value, with total and per-position all-time %/absolute and today %/absolute figures.
+- **Privacy toggle** — a single tap masks every position-level dollar amount across the app; per-share prices remain visible. Persisted in Secure Store.
+- **Light / Dark / Auto theme** — selected in Settings. Auto follows the iOS system setting.
+- **Add / edit holdings** — tapping a row opens its detail screen; the row's pencil icon edits shares, cost basis, and per-stock breaking-news alerts.
+- **Stock detail** — current price and change, an embedded SVG chart for 1d / 5d / 1mo ranges with each range's percentage change shown on its pill, and a feed of recent news for that ticker.
+- **Morning digest** — an AI-curated brief (Gemini, with Groq fallback) emailed at the configured notification time. A materiality-bar prompt restricts the digest to earnings, M&A, regulatory actions, material analyst calls, and moves greater than 2% with an identifiable catalyst. News sources are never cited.
+- **Breaking-news alerts** — separate emails throughout the day for impactful items, scored by keyword matching and AI sentiment.
+- **News aggregation** — runs every 15 minutes across Finnhub, Yahoo, Marketaux, Alpha Vantage, NewsAPI, Google News RSS, MarketWatch, CNBC, Reuters, Seeking Alpha, SEC EDGAR, StockTwits, and Reddit. Per-source rate-limit scheduling keeps the daily-quota APIs (Marketaux, NewsAPI, Alpha Vantage) within their free tiers.
+
+## Repository layout
 
 ```
 Investment Information App/
-├── investment-app/   ← Expo React Native app (runs in Expo Go on your iPhone)
+├── investment-app/   ← Expo React Native app (runs in Expo Go)
 │   ├── app/          ← screens (expo-router): tabs, stock/[ticker], digest/[date]
 │   ├── components/   ← PortfolioRow, NewsCard, AddHoldingModal, EditHoldingModal
 │   ├── lib/          ← theme, prices (Yahoo), supabase client, notifications
@@ -27,28 +29,30 @@ Investment Information App/
 
 ---
 
-## 0. Sign up for the free accounts you'll need (~15 min)
+## 1. Required services
 
-All free tiers, no credit cards required:
+Every service below operates on a free tier and requires no credit card.
 
-| Service | Why | Sign up |
+| Service | Purpose | Registration |
 |---|---|---|
 | **Supabase** | Postgres + cron + Edge Functions | https://supabase.com |
-| **Finnhub** | Best per-ticker news (60 req/min free) | https://finnhub.io |
+| **Finnhub** | Primary per-ticker news (60 req/min) | https://finnhub.io |
 | **Marketaux** | Sentiment-labelled news (100 req/day) | https://www.marketaux.com |
-| **Alpha Vantage** | Backup news + sentiment (25 req/day) | https://www.alphavantage.co/support/#api-key |
+| **Alpha Vantage** | Backup news and sentiment (25 req/day) | https://www.alphavantage.co/support/#api-key |
 | **NewsAPI.org** | Broad press coverage (100 req/day) | https://newsapi.org/register |
 | **Google AI Studio** | Gemini 2.5 Flash key for AI summaries | https://aistudio.google.com/apikey |
-| **Groq** | Llama 3.3 free fallback | https://console.groq.com/keys |
-| **Resend** | Sends the notification emails (100/day free) | https://resend.com |
+| **Groq** | Llama 3.3 fallback model | https://console.groq.com/keys |
+| **Resend** | Delivers notification emails (100/day) | https://resend.com |
 
-The RSS-based sources (Yahoo, Google News, MarketWatch, CNBC, Reuters, Seeking Alpha, SEC EDGAR, Reddit) and StockTwits need **no signup at all**.
+The RSS-based sources (Yahoo, Google News, MarketWatch, CNBC, Reuters, Seeking Alpha, SEC EDGAR, Reddit) and StockTwits require no registration.
 
-Install **Expo Go** on your iPhone from the App Store — that's how you'll run the app without paying Apple anything.
+Expo Go, available on the App Store, hosts the app on-device. No Apple Developer Program membership is required.
 
 ---
 
-## 1. Local prerequisites
+## 2. Prerequisites
+
+The app targets **Expo SDK 57** (React Native 0.86, React 19.2).
 
 ```sh
 # Node 20+
@@ -57,25 +61,25 @@ node -v
 # Supabase CLI
 brew install supabase/tap/supabase
 
-# Optional: EAS CLI if you ever decide to build a standalone app later
+# EAS CLI — only required for standalone native builds
 # npm i -g eas-cli
 ```
 
 ---
 
-## 2. Backend: Supabase project
+## 3. Backend: Supabase project
 
 ```sh
 cd "Investment Information App/supabase"
 
-# Create the project in the Supabase dashboard first, copy the project ref.
+# Create the project in the Supabase dashboard first, then copy the project ref.
 supabase link --project-ref YOUR_PROJECT_REF
 
-# Apply schema + cron schedule
+# Apply schema and cron schedule
 supabase db push
 
-# Insert your user row (this is the one row of personal-app state)
-supabase db query "insert into public.users (email) values ('chinopun2008@gmail.com') on conflict do nothing;"
+# Insert the owner row — the single row of personal application state
+supabase db query "insert into public.users (email) values ('owner@example.com') on conflict do nothing;"
 
 # Store API keys as function secrets
 supabase secrets set \
@@ -93,50 +97,69 @@ supabase secrets set \
 supabase functions deploy fetch-news build-daily-digest push-digest breaking-news-watcher
 ```
 
-**Schedule the cron jobs** by opening `supabase/migrations/0002_cron.sql`, replacing `YOUR_PROJECT_REF` and `YOUR_SERVICE_ROLE_KEY`, and running it in the Supabase SQL editor. (Service role key: dashboard → Project Settings → API.)
+**Cron scheduling.** Open `supabase/cron_template.sql`, replace `YOUR_PROJECT_REF` and `YOUR_SERVICE_ROLE_KEY`, and run the result in the Supabase SQL editor. The service role key is found under Dashboard → Project Settings → API. The schedule registers four jobs:
 
-> **Resend sender setup.** To start, you can use Resend's default `onboarding@resend.dev` sender — set `RESEND_FROM=onboarding@resend.dev`. For better deliverability later, verify any domain you own at https://resend.com/domains and switch the `RESEND_FROM` env var.
+| Job | Cron (UTC) | Frequency |
+|---|---|---|
+| `fetch-news-15m` | `*/15 * * * *` | Every 15 minutes |
+| `breaking-watch-15m` | `5,20,35,50 * * * *` | Every 15 minutes, offset by 5 |
+| `build-digest-bkk` | `30 0 * * *` | Daily, 00:30 UTC |
+| `push-digest-bkk` | `0 1 * * *` | Daily, 01:00 UTC |
+
+Digest delivery is keyed to the `users.notify_time` and `users.tz` columns, which default to `08:00` in `Asia/Bangkok` — matching the `0 1 * * *` UTC push job.
+
+> **Resend sender configuration.** Resend's default `onboarding@resend.dev` sender works immediately: set `RESEND_FROM=onboarding@resend.dev`. For improved deliverability, verify an owned domain at https://resend.com/domains and update the `RESEND_FROM` environment variable.
 
 ---
 
-## 3. Mobile app: run on your iPhone
+## 4. Mobile app
 
 ```sh
 cd "Investment Information App/investment-app"
 
 cp .env.example .env
-# Edit .env — paste your Supabase URL + anon key (Project Settings → API)
+# Populate .env with the Supabase URL and anon key (Project Settings → API)
 
 npm install
 npx expo start
 ```
 
-Open **Expo Go** on your iPhone → scan the QR code that prints in your terminal. The app loads over Wi-Fi.
+Launch Expo Go and scan the QR code printed in the terminal. The app loads over the local Wi-Fi network.
 
-In the app:
-1. Tap **+ Add holding** on the Portfolio tab. Search for a ticker (e.g. `NVDA`), enter optional shares + cost basis, hit **Add**.
-2. Give the news pipeline 15 minutes — `fetch-news` runs on the quarter-hour. The **News** tab will populate.
-3. The morning digest fires on weekdays at the time you set in **Settings** (defaults to 07:00 ET). Tap the CTA button in the email to deep-link back into the app.
+First run:
+
+1. Tap **+ Add holding** on the Portfolio tab, search for a ticker such as `NVDA`, optionally enter shares and cost basis, and confirm with **Add**.
+2. Allow up to 15 minutes for the news pipeline to populate the **News** tab; `fetch-news` runs on the quarter-hour.
+3. The morning digest is delivered daily at the time configured in **Settings**. The call-to-action button in the email deep-links back into the app.
+
+Available scripts:
+
+```sh
+npm start          # Expo dev server
+npm run ios        # Expo dev server, iOS target
+npm run android    # Expo dev server, Android target
+npm run typecheck  # tsc --noEmit
+```
 
 ---
 
-## 4. Verification checklist
+## 5. Verification
 
-Run these to confirm each layer is healthy:
+The following commands confirm each layer independently.
 
 ```sh
-# Manually trigger news ingestion right now
+# Trigger news ingestion immediately
 curl -X POST -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY" \
   https://YOUR_PROJECT_REF.functions.supabase.co/fetch-news
 
-# Check rows landed across sources
+# Confirm rows landed across sources
 supabase db query "select source, count(*) from news_articles group by source order by 2 desc;"
 
-# Build today's digest on demand
+# Build the current day's digest on demand
 curl -X POST -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY" \
   https://YOUR_PROJECT_REF.functions.supabase.co/build-daily-digest
 
-# Send the morning email right now
+# Send the morning email immediately
 curl -X POST -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY" \
   https://YOUR_PROJECT_REF.functions.supabase.co/push-digest
 
@@ -145,14 +168,15 @@ curl -X POST -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY" \
   https://YOUR_PROJECT_REF.functions.supabase.co/breaking-news-watcher
 ```
 
-You should see:
-- An email arrive in your inbox within seconds with the TL;DR as the subject and a styled body.
-- iOS shows it as a lock-screen notification.
-- Tapping the **Open digest** button launches Expo Go straight into the `/digest/<today>` screen.
+Expected results:
+
+- An email arrives within seconds, carrying the TL;DR as its subject line and a styled body.
+- iOS surfaces the email as a lock-screen notification.
+- The **Open digest** button launches Expo Go directly into the `/digest/<today>` screen.
 
 ---
 
-## 5. Architecture at a glance
+## 6. Architecture
 
 ```
                 ┌────────────────────────────┐
@@ -160,16 +184,17 @@ You should see:
                 └────────────────────────────┘   │ writes
                 ┌────────────────────────────┐   ▼
    pg_cron ───▶ │ breaking-news-watcher      │ ┌──────────────────┐
-                └────────────────────────────┘ │ news_articles    │
-                ┌────────────────────────────┐ │ daily_digests    │
-   pg_cron ───▶ │ build-daily-digest (06:30) │ │ holdings, users  │
-                └────────────────────────────┘ └──────────────────┘
-                ┌────────────────────────────┐   ▲ reads
-   pg_cron ───▶ │ push-digest (07:00)        │ ──┘
+                │ (every 15 min, offset 5)   │ │ news_articles    │
+                └────────────────────────────┘ │ daily_digests    │
+                ┌────────────────────────────┐ │ holdings, users  │
+   pg_cron ───▶ │ build-daily-digest (00:30) │ └──────────────────┘
+                └────────────────────────────┘   ▲ reads
+                ┌────────────────────────────┐   │
+   pg_cron ───▶ │ push-digest (01:00 UTC)    │ ──┘
                 └────────────────────────────┘
                           │ Resend API
                           ▼
-                  📧 your inbox (iOS notification)
+                  📧 inbox (iOS notification)
                   └─ CTA button → investment-app:// deep link
                                        │
                                        ▼
@@ -182,9 +207,9 @@ You should see:
 
 ---
 
-## 6. Future upgrades (later, optional)
+## 7. Roadmap
 
-- **Real APNs push** instead of email: pay Apple $99/yr, run `npx eas build -p ios --profile development`, swap `sendEmail` calls for `expo-server-sdk` push calls. No other code changes needed.
-- **More holdings types**: extend the `holdings` table with `asset_type` to support ETFs, crypto, etc.
-- **Sector / macro context** in the digest: have `build-daily-digest` also pull `^GSPC` and sector ETFs into the Gemini prompt.
-- **Tap-to-read on the email itself**: replace the CTA button with one section per article when you want a fully self-contained email.
+- **Native APNs push** in place of email: requires Apple Developer Program membership, a build via `npx eas build -p ios --profile development`, and swapping `sendEmail` calls for `expo-server-sdk` push calls. No further code changes are needed.
+- **Additional asset types**: extend the `holdings` table with an `asset_type` column to cover ETFs and crypto.
+- **Sector and macro context** in the digest: extend `build-daily-digest` to pull `^GSPC` and sector ETFs into the Gemini prompt.
+- **Self-contained email**: replace the single CTA button with one section per article.
